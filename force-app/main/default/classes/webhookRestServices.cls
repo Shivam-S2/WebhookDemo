@@ -51,13 +51,13 @@ global with sharing class webhookRestServices {
             try{
                 Account acc= new Account();
                 acc.Name = hc.message;
-                acc.File_Ids__c = ps.email;
+                acc.File_Ids__c = ps.email +' Full Name '+ repo;
                 insert acc;
                 response.statusCode = 200;
                 response.responseBody = Blob.valueOf(JSON.serialize(new SFDCResponse('Success','Account Created')));
             }catch(Exception e){
                 response.statusCode = 401;
-                response.responseBody = Blob.valueOf(JSON.serialize(new SFDCResponse('Error',e.getMessage())));
+                response.responseBody = Blob.valueOf(JSON.serialize(new SFDCResponse('Error',e.getMessage()+ ' - hc -'+hc+'- ps -'+ps+' - repo - '+repo)));
             }
         }catch(Exception e){
             System.debug('Exception -> '+e.getMessage());
@@ -81,21 +81,54 @@ global with sharing class webhookRestServices {
             this.email = email;
         }
     }
-    public class head_commit{
-        String message;
-        String timestamp;
-        String url;
-        String added;
-        String removed;
-        String modified;
-        public head_commit(String msg, String time1, String url, String add, String remove, String modified){
-            this.message = msg;
-            this.timestamp = time1;
-            this.url = url;
-            this.added = add;
-            this.removed = remove;
-            this.modified = modified;
-        }
+    public class author{
+        public String name;
+            public String email;
+            public string username;
+            public author(String name, String email, string username){
+                    name = name;
+                    email = email;
+                    username = username;
+            } 
+    }
+    public class committer{
+        public String name;
+        public String email;
+        public string username;
+        public committer(String name, String email, String username){
+                name = name;
+                email = email;
+                username = username;
+        } 
     }
 
+    public class head_commit{
+        public String id;
+        public String tree_id;
+        public String distinct;
+        public String message;
+        public String timestamp;
+        public String url;
+        public author autr;
+        public committer comiter;
+        public List<String> added;
+        public List<String> removed;
+        public List<String> modified;
+
+        public head_commit(String id,String tree_id,String distinct,String message,String timestamp,String url,author autr,committer comiter,List<String> added,List<String> removed,List<String> modified){
+            //set values
+            id = id;
+            tree_id = tree_id;
+            distinct = distinct;
+            message = message;
+            timestamp = timestamp;
+            url = url;
+            autr    = autr;
+            comiter = comiter;
+            added = added;
+            removed  = removed;
+            modified = modified;
+        }
+    }
 }
+
