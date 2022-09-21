@@ -7,10 +7,9 @@ global with sharing class webhookRestServices {
     @HttpPost
     global static void handleRequest(){
         //Request
+        RestRequest request = RestContext.request;
+        RestResponse response = RestContext.response;
         try{
-            RestRequest request = RestContext.request;
-            RestResponse response = RestContext.response;
-
             String hashedval = request.headers.get('X-Hub-Signature-256');
             System.debug('Hashed Value -> '+hashedval);
 
@@ -24,8 +23,9 @@ global with sharing class webhookRestServices {
             pusher ps;
             head_commit hc;
             String repo;
+            
             while (parser.nextToken() !=null) {
-                System.debug('@Parser Next Token@'+parser.nextToken());
+
                 if(parser.getText() == 'pusher'){
                     System.debug('Pusher -> ');
 
@@ -50,21 +50,24 @@ global with sharing class webhookRestServices {
             }
             try{
                 Account acc= new Account();
-                acc.Name = hc.message;
-                acc.File_Ids__c = ps.email +' Full Name '+ repo;
+                acc.Name = hc!=null?hc.message:'';
+                acc.File_Ids__c = ps.email +'- Full Name '+ repo+' --> '+'Webhook Record';
                 insert acc;
                 response.statusCode = 200;
-                response.responseBody = Blob.valueOf(JSON.serialize(new SFDCResponse('Success','Account Created')));
+                response.responseBody = Blob.valueOf(JSON.serialize(new SFDCResponse('Success','Account Created ->'+ '## '+hc.message)));
             }catch(Exception e){
+                
                 response.statusCode = 401;
                 response.responseBody = Blob.valueOf(JSON.serialize(new SFDCResponse('Error',e.getMessage()+ ' - hc -'+hc+'- ps -'+ps+' - repo - '+repo)));
             }
         }catch(Exception e){
             System.debug('Exception -> '+e.getMessage());
+            response.statusCode = 401;
+            response.responseBody = Blob.valueOf(JSON.serialize(new SFDCResponse('Error',e.getMessage()+ ' #Line '+e.getLineNumber())));
         }
         
     }
-
+   
     public class SFDCResponse{
         String response;
         String message;
@@ -116,7 +119,6 @@ global with sharing class webhookRestServices {
         public List<String> modified;
 
         public head_commit(String id,String tree_id,String distinct,String message,String timestamp,String url,author autr,committer comiter,List<String> added,List<String> removed,List<String> modified){
-            //set values
             id = id;
             tree_id = tree_id;
             distinct = distinct;
@@ -131,4 +133,3 @@ global with sharing class webhookRestServices {
         }
     }
 }
-
